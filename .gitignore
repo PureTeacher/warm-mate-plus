@@ -1,0 +1,43 @@
+# Documents and local plan-book artifacts
+*.doc
+*.docx
+*.dotx
+~$*
+.dsh-filess/
+plan_book/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+app/android/local.properties
+
+# JavaScript dependencies and caches
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Android / Gradle generated files
+**/.gradle/
+**/build/
+*.aab
+
+# Python generated files
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# IDE, OS and runtime files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>暖愈心伴 · Warm Mate</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="phone">
+
+    <!-- ============ 启动 / 登录 ============ -->
+    <section class="screen active" id="screen-auth">
+      <div class="auth-wrap">
+        <div class="auth-brand">
+          <div class="auth-logo">🌿</div>
+          <h1>暖愈心伴</h1>
+          <div class="slogan">Warm Mate · 你的随身心理陪伴</div>
+        </div>
+
+        <div class="auth-tabs">
+          <div class="on" data-auth="login">登录</div>
+          <div data-auth="register">注册</div>
+        </div>
+
+        <div class="auth-form">
+          <div class="field">
+            <label>手机号</label>
+            <input id="auth-phone" type="tel" placeholder="请输入手机号" maxlength="11" value="13800138000" />
+          </div>
+          <div class="field">
+            <label>密码</label>
+            <div class="pwd-wrap">
+              <input id="auth-pwd" type="password" placeholder="请输入密码" />
+              <span class="pwd-eye" onclick="togglePwd()">👁</span>
+            </div>
+            <div class="forgot" onclick="openForgot()">忘记密码？</div>
+          </div>
+          <div class="field" id="auth-pwd2-wrap" style="display:none">
+            <label>确认密码</label>
+            <input id="auth-pwd2" type="password" placeholder="请再次输入密码" />
+          </div>
+          <label class="agree">
+            <input type="checkbox" id="auth-agree" checked />
+            <span>我已阅读并同意 <span class="text-link" onclick="event.stopPropagation();openAgreement()">《用户协议》</span> 与 <span class="text-link" onclick="event.stopPropagation();openPrivacy()">《隐私政策》</span></span>
+          </label>
+          <button class="btn btn-primary btn-block" id="auth-submit">登 录</button>
+          <div class="auth-hint">匿名服务 · 数据加密 · 严格保护你的隐私</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 首页 ============ -->
+    <section class="screen" id="screen-home">
+      <div class="scroll">
+        <div class="home-hero" style="margin-top:14px">
+          <div class="hello">晚上好 👋</div>
+          <div class="name" id="home-name">亲爱的用户</div>
+          <div class="greet">今天感觉怎么样？我在这里，<br/>随时愿意听你说说。</div>
+          <div class="mood" onclick="go('chat')">🌱 记录此刻心情 · 找小暖聊聊</div>
+        </div>
+
+        <div class="sec-head"><h3>开始你的心灵之旅</h3></div>
+        <div class="grid-2">
+          <div class="feat" onclick="go('chat')">
+            <div class="ico ico-green">💬</div>
+            <h4>AI 暖心对话</h4>
+            <p>24 小时在线，随时倾诉与陪伴</p>
+          </div>
+          <div class="feat" onclick="go('scales')">
+            <div class="ico ico-purple">📋</div>
+            <h4>专业心理测评</h4>
+            <p>7 种权威量表，科学了解自己</p>
+          </div>
+          <div class="feat" onclick="go('articles')">
+            <div class="ico ico-gold">📖</div>
+            <h4>健康科普</h4>
+            <p>五大分类，专业内容伴你成长</p>
+          </div>
+          <div class="feat" onclick="go('book')">
+            <div class="ico ico-coral">🧑‍⚕️</div>
+            <h4>咨询师预约</h4>
+            <p>20+ 资深咨询师，一对一指导</p>
+          </div>
+        </div>
+
+        <div class="sec-head"><h3>每日一句</h3></div>
+        <div class="daily-card">
+          <div class="q">“你不是一个人。允许自己慢下来，本身就是一种勇气。”</div>
+          <div class="by">—— 暖愈心伴 · 每日陪伴</div>
+        </div>
+
+        <div class="sec-head"><h3>为你推荐</h3></div>
+        <div id="home-articles" style="display:grid;gap:12px"></div>
+      </div>
+
+      <nav class="tabbar">
+        <div class="tab on" data-tab="home"><span class="ico">🏠</span>首页</div>
+        <div class="tab" data-tab="scales"><span class="ico">📋</span>测评</div>
+        <div class="tab" data-tab="articles"><span class="ico">📖</span>科普</div>
+        <div class="tab" data-tab="profile"><span class="ico">👤</span>我的</div>
+      </nav>
+    </section>
+
+    <!-- ============ AI 对话 ============ -->
+    <section class="screen" id="screen-chat">
+      <div class="chat-head">
+        <div class="topbar" style="padding:0">
+          <div class="back" onclick="back()">‹</div>
+        </div>
+        <div class="avatar">🌿<span class="dot"></span></div>
+        <div>
+          <div class="nm">小暖 · AI 心理陪伴师</div>
+          <div class="st">在线 · 24h 倾听</div>
+        </div>
+      </div>
+
+      <div class="chips-row" id="chat-chips"></div>
+
+      <div class="chat-body" id="chat-body"></div>
+
+      <div class="chat-input">
+        <input id="chat-input" type="text" placeholder="说说你的心里话…" />
+        <button class="send-btn" onclick="sendChat()">➤</button>
+      </div>
+    </section>
+
+    <!-- ============ 测评列表 ============ -->
+    <section class="screen" id="screen-scales">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">心理测评</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <p style="font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:16px">
+          基于国际权威量表（PHQ-9、GAD-7 等），3–5 分钟完成一次自我觉察，自动生成专属报告。
+        </p>
+        <div class="chips-row" style="padding:0 0 14px" id="scale-cats"></div>
+        <div id="scale-list"></div>
+      </div>
+      <nav class="tabbar">
+        <div class="tab" data-tab="home"><span class="ico">🏠</span>首页</div>
+        <div class="tab on" data-tab="scales"><span class="ico">📋</span>测评</div>
+        <div class="tab" data-tab="articles"><span class="ico">📖</span>科普</div>
+        <div class="tab" data-tab="profile"><span class="ico">👤</span>我的</div>
+      </nav>
+    </section>
+
+    <!-- ============ 答题 ============ -->
+    <section class="screen" id="screen-quiz">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title" id="quiz-title">测评中</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <div class="quiz-progress"><i id="quiz-bar" style="width:8%"></i></div>
+        <div id="quiz-body"></div>
+        <button class="btn btn-primary btn-block mt-16" id="quiz-next" onclick="quizNext()">下一题</button>
+      </div>
+    </section>
+
+    <!-- ============ 测评结果 ============ -->
+    <section class="screen" id="screen-result">
+      <div class="topbar">
+        <div class="back" onclick="go('scales')">‹</div>
+        <div class="title">测评报告</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <div class="card" id="result-card"></div>
+      </div>
+      <nav class="tabbar">
+        <div class="tab" data-tab="home"><span class="ico">🏠</span>首页</div>
+        <div class="tab on" data-tab="scales"><span class="ico">📋</span>测评</div>
+        <div class="tab" data-tab="articles"><span class="ico">📖</span>科普</div>
+        <div class="tab" data-tab="profile"><span class="ico">👤</span>我的</div>
+      </nav>
+    </section>
+
+    <!-- ============ 科普列表 ============ -->
+    <section class="screen" id="screen-articles">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">健康科普</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <div class="field">
+          <input id="article-search" type="text" placeholder="🔍 搜索你关心的健康话题…" oninput="renderArticles()" />
+        </div>
+        <div class="chips-row" style="padding:0 0 14px" id="article-cats"></div>
+        <div id="article-list"></div>
+      </div>
+      <nav class="tabbar">
+        <div class="tab" data-tab="home"><span class="ico">🏠</span>首页</div>
+        <div class="tab" data-tab="scales"><span class="ico">📋</span>测评</div>
+        <div class="tab on" data-tab="articles"><span class="ico">📖</span>科普</div>
+        <div class="tab" data-tab="profile"><span class="ico">👤</span>我的</div>
+      </nav>
+    </section>
+
+    <!-- ============ 文章详情 ============ -->
+    <section class="screen" id="screen-article">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">文章详情</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <div class="card article-detail" id="article-detail"></div>
+      </div>
+    </section>
+
+    <!-- ============ 预约列表 ============ -->
+    <section class="screen" id="screen-book">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">咨询师预约</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <p style="font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:16px">
+          20+ 位资深心理咨询师在线，AI 评估 + 人工干预，形成立体化服务闭环。
+        </p>
+        <div class="chips-row" style="padding:0 0 14px" id="doc-cats"></div>
+        <div id="doc-list"></div>
+      </div>
+      <nav class="tabbar">
+        <div class="tab" data-tab="home"><span class="ico">🏠</span>首页</div>
+        <div class="tab" data-tab="scales"><span class="ico">📋</span>测评</div>
+        <div class="tab" data-tab="articles"><span class="ico">📖</span>科普</div>
+        <div class="tab" data-tab="profile"><span class="ico">👤</span>我的</div>
+      </nav>
+    </section>
+
+    <!-- ============ 预约表单 ============ -->
+    <section class="screen" id="screen-book-form">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">填写预约</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <div class="card" id="book-doc-brief" style="margin-bottom:14px"></div>
+        <div class="card">
+          <div class="field"><label>姓名</label><input id="bf-name" placeholder="你的姓名" /></div>
+          <div class="field"><label>手机号</label><input id="bf-phone" type="tel" placeholder="联系电话" /></div>
+          <div class="field">
+            <label>性别</label>
+            <select id="bf-sex"><option>女</option><option>男</option><option>不便透露</option></select>
+          </div>
+          <div class="field"><label>年龄</label><input id="bf-age" type="number" placeholder="年龄" /></div>
+          <div class="field">
+            <label>咨询内容描述</label>
+            <textarea id="bf-desc" placeholder="简单描述你想咨询的问题（可选）"></textarea>
+          </div>
+          <div class="field">
+            <label>紧急程度</label>
+            <div class="urgency" id="bf-urgency">
+              <div class="chip on" data-v="一般">一般</div>
+              <div class="chip" data-v="较急">较急</div>
+              <div class="chip" data-v="紧急">紧急</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>时间偏好</label>
+            <div class="urgency" id="bf-time">
+              <div class="chip on" data-v="工作日">工作日</div>
+              <div class="chip" data-v="周末">周末</div>
+              <div class="chip" data-v="随时">随时</div>
+            </div>
+          </div>
+          <button class="btn btn-accent btn-block mt-8" onclick="submitBooking()">提交预约</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 我的 ============ -->
+    <section class="screen" id="screen-profile">
+      <div class="scroll">
+        <div class="profile-head">
+          <div class="p-avatar">🌿</div>
+          <h3 id="profile-name">亲爱的用户</h3>
+          <p>暖愈心伴 · 匿名安全模式</p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-box" onclick="go('records')"><div class="n" id="stat-chat">0</div><div class="l">对话次数</div></div>
+          <div class="stat-box" onclick="go('records')"><div class="n" id="stat-scale">0</div><div class="l">测评报告</div></div>
+          <div class="stat-box" onclick="go('records')"><div class="n" id="stat-book">0</div><div class="l">咨询预约</div></div>
+        </div>
+
+        <div class="menu">
+          <div class="mi" onclick="goRecords('chat')"><span class="ico">🕘</span>历史记录<span class="arrow">›</span></div>
+          <div class="mi" onclick="goRecords('scale')"><span class="ico">📋</span>我的测评<span class="arrow">›</span></div>
+          <div class="mi" onclick="goRecords('book')"><span class="ico">🧑‍⚕️</span>我的预约<span class="arrow">›</span></div>
+          <div class="mi" onclick="openFavorites()"><span class="ico">⭐</span>我的收藏<span class="arrow">›</span></div>
+          <div class="mi" onclick="openSettings()"><span class="ico">⚙️</span>设置<span class="arrow">›</span></div>
+        </div>
+
+        <div class="menu mt-16">
+          <div class="mi" onclick="openAgreement()"><span class="ico">📄</span>用户协议<span class="arrow">›</span></div>
+          <div class="mi" onclick="openPrivacy()"><span class="ico">🔒</span>隐私政策<span class="arrow">›</span></div>
+          <div class="mi" onclick="logout()"><span class="ico">🚪</span>退出登录<span class="arrow">›</span></div>
+        </div>
+      </div>
+
+      <nav class="tabbar">
+        <div class="tab" data-tab="home"><span class="ico">🏠</span>首页</div>
+        <div class="tab" data-tab="scales"><span class="ico">📋</span>测评</div>
+        <div class="tab" data-tab="articles"><span class="ico">📖</span>科普</div>
+        <div class="tab on" data-tab="profile"><span class="ico">👤</span>我的</div>
+      </nav>
+    </section>
+
+    <!-- ============ 历史记录 ============ -->
+    <section class="screen" id="screen-records">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">历史记录</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <div class="chips-row" style="padding:0 0 14px" id="record-tabs">
+          <div class="chip on" data-r="chat">对话</div>
+          <div class="chip" data-r="scale">测评</div>
+          <div class="chip" data-r="book">预约</div>
+        </div>
+        <div id="record-list"></div>
+      </div>
+    </section>
+
+    <!-- 提示浮层 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 通用模态 -->
+    <div class="modal-mask" id="modal">
+      <div class="sheet" id="modal-body"></div>
+    </div>
+
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

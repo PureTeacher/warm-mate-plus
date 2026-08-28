@@ -1,0 +1,19 @@
+{
+  "name": "warm-mate-app",
+  "version": "1.1.2",
+  "description": "暖愈心伴 Warm Mate - 心理健康 AI 陪伴 App (Android)",
+  "private": true,
+  "scripts": {
+    "sync": "npx cap sync",
+    "android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}
