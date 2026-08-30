@@ -370,14 +370,27 @@ def admin_list_messages(limit: int = 100, username: str = Depends(require_admin)
 
 
 # ---------------------------------------------------------------------------
-# 静态托管
+# 静态托管（兼容两种部署布局：源码在 backend/ 子目录 或 直接在项目根目录）
 # ---------------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_STATIC = os.path.join(BASE_DIR, "..", "prototype")
-ADMIN_STATIC = os.path.join(BASE_DIR, "..", "user-admin", "static")
 
-if os.path.isdir(ADMIN_STATIC):
+def _first_existing(candidates):
+    for c in candidates:
+        if os.path.isdir(c):
+            return c
+    return None
+
+APP_STATIC = _first_existing([
+    os.path.join(BASE_DIR, "static"),           # 服务器根目录布局
+    os.path.join(BASE_DIR, "..", "prototype"),  # 本仓库布局（backend/../prototype）
+])
+ADMIN_STATIC = _first_existing([
+    os.path.join(BASE_DIR, "user-admin", "static"),       # 服务器根目录布局
+    os.path.join(BASE_DIR, "..", "user-admin", "static"), # 本仓库布局
+])
+
+if ADMIN_STATIC:
     app.mount("/admin", StaticFiles(directory=ADMIN_STATIC, html=True), name="admin")
 
-if os.path.isdir(APP_STATIC):
+if APP_STATIC:
     app.mount("/", StaticFiles(directory=APP_STATIC, html=True), name="static")
