@@ -4,19 +4,45 @@
 
 /* ---------- 后端 API 配置 ---------- */
 const CLOUD_API = 'http://47.93.117.13:8080';
-const API_BASE = (location.protocol === 'http:' || location.protocol === 'https:') && location.hostname === '47.93.117.13'
-  ? '' : CLOUD_API;
+// 由本项目后端托管时走同源相对路径；file:// 或 Capacitor 容器时使用云端地址。
+// 如需指定其它后端，可在加载 app.js 前设置 window.__WM_API__。
+const API_BASE = (window.__WM_API__ !== undefined)
+  ? window.__WM_API__
+  : ((location.protocol === 'http:' || location.protocol === 'https:') ? '' : CLOUD_API);
 
 /* ---------- 全局状态 ---------- */
 const store = {
   user: { name: '亲爱的用户', phone: '13800138000' },
-  loggedIn: false,
+  token: localStorage.getItem('wm_token') || '',
+  loggedIn: !!localStorage.getItem('wm_token'),
   chatCount: 0,
   scaleRecords: [],      // { id, name, score, level, date }
   bookRecords: [],       // { doc, name, phone, urgency, time, status, date }
   favorites: [],         // 收藏的文章 id
-  history: []            // 页面栈
+  history: [],           // 页面栈
+  messages: [],          // 消息中心（医生/管理员建议）
+  unreadMsgs: 0
 };
+
+/* ---------- 后端接口辅助 ---------- */
+function authHeaders() {
+  return store.token ? { 'Authorization': 'Bearer ' + store.token } : {};
+}
+function apiFetch(path, options) {
+  options = options || {};
+  options.headers = Object.assign({ 'Content-Type': 'application/json' }, authHeaders(), options.headers || {});
+  return fetch(API_BASE + path, options);
+}
+// 上报使用事件（静默、失败不打扰用户）
+function trackEvent(type, detail) {
+  if (!store.token) return;
+  try {
+    apiFetch('/api/app/events', {
+      method: 'POST',
+      body: JSON.stringify({ events: [{ type: type, detail: detail || {} }] })
+    }).catch(function () {});
+  } catch (e) {}
+}
 
 /* ---------- 工具 ---------- */
 const $ = (id) => document.getElementById(id);
@@ -106,7 +132,7 @@ document.querySelectorAll('.auth-tabs div').forEach(t => {
   });
 });
 
-$('auth-submit').addEventListener('click', () => {
+$('auth-submit').addEventListener('click', async () => {
   const phone = $('auth-phone').value.trim();
   const pwd = $('auth-pwd').value;
   const pwd2 = $('auth-pwd2').value;
@@ -116,15 +142,49 @@ $('auth-submit').addEventListener('click', () => {
   if (authMode === 'register' && pwd !== pwd2) return toast('两次密码不一致');
   if (!$('auth-agree').checked) return toast('请先阅读并同意协议');
 
-  store.loggedIn = true;
-  store.user = { name: '暖友 ' + phone.slice(-4), phone };
-  toast(authMode === 'login' ? '欢迎回来 🌿' : '注册成功，欢迎加入 🌿');
-  initHome();
-  showScreen('screen-home');
+  const btn = $('auth-submit');
+  btn.disabled = true;
+  btn.textContent = authMode === 'login' ? '登录中…' : '注册中…';
+  const url = authMode === 'login' ? '/api/app/login' : '/api/app/register';
+  try {
+    const res = await fetch(API_BASE + url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: phone, password: pwd, device: 'web', app_version: '1.2.0' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || '登录失败');
+    store.token = data.token;
+    localStorage.setItem('wm_token', data.token);
+    store.loggedIn = true;
+    store.user = data.user || { name: '暖友 ' + phone.slice(-4), phone };
+    toast(authMode === 'login' ? '欢迎回来 🌿' : '注册成功，欢迎加入 🌿');
+    trackEvent(authMode === 'login' ? 'login' : 'register');
+    initHome();
+    showScreen('screen-home');
+    refreshMessages();
+  } catch (e) {
+    // 后端不可达时，演示账号回退到本地演示（保证离线可演示）
+    if (authMode === 'login' && phone === '13800138000') {
+      store.loggedIn = true;
+      store.user = { name: '暖友 ' + phone.slice(-4), phone };
+      toast('后端暂不可用，已进入演示模式');
+      initHome();
+      showScreen('screen-home');
+    } else {
+      toast((e.message || '登录失败，请稍后重试'));
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = authMode === 'login' ? '登 录' : '注 册';
+  }
 });
 
 function logout() {
   store.loggedIn = false;
+  store.token = '';
+  store.user = { name: '亲爱的用户', phone: '13800138000' };
+  localStorage.removeItem('wm_token');
   $('auth-pwd').value = '';
   showScreen('screen-auth');
   toast('已安全退出');
@@ -172,7 +232,7 @@ function renderChatChips() {
 
 function seedChat() {
   if ($('chat-body').children.length > 0) return;
-  addMsg('ai', '你好，我是小暖 🌿 你的专属 AI 心理陪伴师。\n\n无论此刻你是开心还是低落，都可以放心地跟我聊聊。我会认真倾听，陪你一起梳理情绪。', true);
+  addMsg('ai', '你好，我是小暖，一名 AI 心理支持助手。\n\n我可以陪你梳理情绪和寻找现实支持，但不能诊断、治疗或替代心理咨询师、医生与紧急救援。请不要输入姓名、学号、住址等可识别信息。', true);
 }
 
 function quickChat(q) {
@@ -225,6 +285,7 @@ function typewriter(el, text) {
 function respond(text) {
   if (!chatReady) return;
   chatReady = false;
+  trackEvent('chat_message', { desc: '向小暖倾诉', len: text.length });
 
   // 记录对话历史（不含本次用户消息）
   const history = chatHistory.slice();
@@ -246,6 +307,13 @@ function respond(text) {
     addMsg('ai', reply);
     chatReady = true;
   };
+
+  // 危机表达先经过本地确定性安全门，不等待网络或大模型判断。
+  const risk = assessRisk(text);
+  if (risk.level === 'high' || risk.level === 'urgent') {
+    finish(buildCrisisReply(risk.level));
+    return;
+  }
 
   fetchTimeout(API_BASE + '/api/chat', {
     method: 'POST',
@@ -361,6 +429,7 @@ function showResult() {
   store.scaleRecords.push({
     id: s.id, name: s.name, score, level: r.level, date: today()
   });
+  trackEvent('scale_complete', { name: s.name, score: score, level: r.level });
 
   $('result-card').innerHTML = `
     <div class="result-hero">
@@ -379,8 +448,8 @@ function showResult() {
     </div>
     <div class="divider"></div>
     <p style="font-size:12px;color:var(--text-3);line-height:1.7">
-      * 本测评基于国际权威量表（${s.name}）自动计分，仅供自我了解参考，不构成医学诊断。
-      如结果提示异常，请及时预约专业咨询或前往正规医疗机构。
+      * 本原型依据所列筛查工具进行演示性计分，仅供自我了解参考，不构成医学诊断。
+      正式使用前仍需核验量表版本、授权、适用人群和计分规则；如持续困扰，请联系正规专业机构。
     </p>
     <button class="btn btn-accent btn-block mt-16" onclick="go('book')">需要帮助？预约咨询师</button>
     <button class="btn btn-ghost btn-block mt-8" onclick="go('scales')">完成 · 返回测评</button>`;
@@ -421,6 +490,7 @@ function renderArticles() {
 function openArticle(id) {
   const a = ARTICLES.find(x => x.id === id);
   if (!a) return;
+  trackEvent('article_read', { title: a.title });
   $('article-detail').innerHTML = `
     <div class="cover" style="height:140px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:52px;background:${a.cover}">${a.icon}</div>
     <h1>${a.title}</h1>
@@ -455,9 +525,9 @@ function renderDoctors() {
         <h4>${d.name}</h4>
         <div class="title">${d.title}</div>
         <div class="tags">${d.fields.map(f => `<span class="tag tag-green">${f}</span>`).join('')}</div>
-        <div class="rate">⭐ ${d.rate} · ${d.count} 次咨询</div>
+        <div class="rate">${d.status}</div>
       </div>
-      <button class="btn btn-accent btn-sm book-btn" onclick="openBooking(${d.id})">预约</button>
+      <button class="btn btn-accent btn-sm book-btn" onclick="openBooking(${d.id})">查看流程</button>
     </div>`).join('');
 }
 
@@ -469,7 +539,7 @@ function openBooking(id) {
       <div class="info">
         <h4>${bookingDoc.name}</h4>
         <div class="title">${bookingDoc.title}</div>
-        <div class="rate">⭐ ${bookingDoc.rate} · ${bookingDoc.count} 次咨询</div>
+        <div class="rate">${bookingDoc.status}</div>
       </div>
     </div>
     <p style="font-size:13px;color:var(--text-2);margin-top:10px;line-height:1.6">${bookingDoc.intro}</p>`;
@@ -498,7 +568,8 @@ function submitBooking() {
   store.bookRecords.push({
     doc: bookingDoc.name, name, phone, urgency, time: timePref, status: '待处理', date: today()
   });
-  toast('预约已提交，24 小时内反馈 🌿');
+  trackEvent('book_create', { doc: bookingDoc.name, urgency: urgency, time: timePref });
+  toast('演示记录已保存于本次会话，不会发送给真实机构');
   updateStats();
   setTimeout(() => showScreen('screen-book'), 900);
 }
@@ -567,6 +638,65 @@ function renderRecords() {
   wrap.innerHTML = html;
 }
 
+/* ---------- 消息中心（接收医生/管理员建议） ---------- */
+function refreshMessages() {
+  if (!store.token) { store.messages = []; store.unreadMsgs = 0; updateMsgBadges(); return; }
+  apiFetch('/api/app/messages').then(function (res) { if (res.ok) return res.json(); throw new Error(); })
+    .then(function (data) {
+      store.messages = (data && data.messages) || [];
+      store.unreadMsgs = (data && data.unread) || 0;
+      updateMsgBadges();
+      const el = $('msg-list');
+      if (el) renderMessagesView();
+    }).catch(function () {});
+}
+
+function updateMsgBadges() {
+  const n = store.unreadMsgs;
+  const b = $('msg-badge');
+  if (b) b.textContent = n > 0 ? n : '';
+  const bh = $('msg-badge-home');
+  if (bh) bh.textContent = n > 0 ? n : '';
+}
+
+function openMessages() {
+  go('messages');
+  renderMessagesView();
+}
+
+function renderMessagesView() {
+  const wrap = $('msg-list');
+  if (!wrap) return;
+  const msgs = store.messages || [];
+  if (!msgs.length) {
+    wrap.innerHTML = `<div class="empty"><span class="emoji">📭</span><p>暂无消息</p><p style="font-size:12px;color:var(--text-3);margin-top:4px">医生/管理员发送的关怀建议会显示在这里</p></div>`;
+    return;
+  }
+  wrap.innerHTML = msgs.map(function (m) {
+    const who = m.sender_role === 'admin' ? '管理员' : '医生';
+    return `
+      <div class="card msg-card ${m.read ? '' : 'unread'}">
+        <div class="msg-head">${m.read ? '📬' : '🔔'} <b>${m.sender_name || who}（${who}）</b><span class="msg-time">${m.created_at ? m.created_at.slice(5,16).replace('T',' ') : ''}</span></div>
+        <div class="msg-body">${m.content}</div>
+        ${m.read ? '' : '<div class="msg-actions"><button class="btn btn-ghost btn-sm" onclick="markMsgRead(this,' + m.id + ')">标记已读</button></div>'}
+      </div>`;
+  }).join('');
+}
+
+function markMsgRead(btn, id) {
+  if (!store.token) return;
+  apiFetch('/api/app/messages/' + id + '/read', { method: 'POST' })
+    .then(function () {
+      const m = store.messages.find(function (x) { return x.id === id; });
+      if (m) m.read = 1;
+      if (store.unreadMsgs > 0) store.unreadMsgs--;
+      updateMsgBadges();
+      if (btn) btn.closest('.msg-actions').remove();
+      const card = btn ? btn.closest('.msg-card') : null;
+      if (card) card.classList.remove('unread');
+    }).catch(function () {});
+}
+
 /* ---------- 模态框 ---------- */
 function showModal(html) {
   $('modal-body').innerHTML = '<div class="close" onclick="closeModal()">✕</div>' + html;
@@ -584,7 +714,7 @@ function openAgreement() {
     <div class="article-detail"><div class="body">
       <p>欢迎使用「暖愈心伴」心理健康服务平台。使用前请仔细阅读本协议。</p>
       <h3>一、服务说明</h3>
-      <p>本应用提供 AI 心理陪伴、心理测评、健康科普与咨询预约等服务，为用户提供心理健康支持与自我觉察工具。</p>
+      <p>当前版本为功能原型，提供 AI 情绪支持、自我筛查演示、健康科普与专业资源预约流程演示。</p>
       <h3>二、账号与使用</h3>
       <p>用户应妥善保管账号信息，不得利用本应用从事违法或有害活动。</p>
       <h3>三、免责声明</h3>
@@ -598,22 +728,22 @@ function openPrivacy() {
   showModal(`
     <h3>隐私政策</h3>
     <div class="article-detail"><div class="body">
-      <p>我们深知心理健康信息的高度敏感性，将隐私保护视为第一原则。</p>
-      <h3>一、匿名服务</h3>
-      <p>平台支持匿名使用，最小化收集个人信息，仅收集提供服务所必需的信息。</p>
-      <h3>二、数据加密</h3>
-      <p>对话内容、测评结果等敏感数据采用加密存储与传输，未经你授权不会向第三方披露。</p>
-      <h3>三、你的权利</h3>
-      <p>你可以随时查看、导出或删除自己的数据，也可联系我们注销账号。</p>
-      <h3>四、承诺</h3>
-      <p>我们不贩卖任何用户数据，不利用心理数据做商业画像。</p>
+      <p>当前版本为竞赛功能原型，尚未形成生产级账户、持久化、导出删除与加密体系，请勿输入姓名、学号、住址等可识别敏感信息。</p>
+      <h3>一、当前数据流</h3>
+      <p>登录、测评、收藏和预约记录主要保存在本次前端会话；AI 对话输入会发送至项目后端并调用第三方大模型服务生成回复。</p>
+      <h3>二、使用边界</h3>
+      <p>原型不用于诊断、治疗、紧急救援或正式预约。正式试点前将补充单独同意、最小化收集、传输与存储加密、留存期限、导出删除和第三方处理清单。</p>
+      <h3>三、安全提示</h3>
+      <p>如存在立即危险，请直接联系110、120、身边可信任的人或当地经核验的专业机构，不要依赖本原型处置紧急情况。</p>
     </div></div>`);
 }
 
 function toggleFavorite(id) {
+  const a = ARTICLES.find(x => x.id === id);
   const i = store.favorites.indexOf(id);
   if (i >= 0) { store.favorites.splice(i, 1); toast('已取消收藏'); }
   else { store.favorites.push(id); toast('已收藏 ⭐'); }
+  trackEvent('article_favorite', { title: (a ? a.title : '') });
 }
 
 function openFavorites() {
@@ -665,6 +795,19 @@ function init() {
   updateStats();
   renderRecords();
   $('chat-body').addEventListener('click', () => {});
+
+  // 已登录则恢复会话并上报“打开应用”
+  if (store.token) {
+    apiFetch('/api/app/me').then(function (res) { if (res.ok) return res.json(); throw new Error(); })
+      .then(function (u) {
+        if (u && u.phone) {
+          store.user = { name: u.name || ('暖友 ' + u.phone.slice(-4)), phone: u.phone };
+          $('home-name').textContent = store.user.name;
+        }
+      }).catch(function () {});
+    trackEvent('app_open');
+    refreshMessages();
+  }
 }
 
 init();

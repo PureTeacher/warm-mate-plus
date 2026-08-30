@@ -45,7 +45,7 @@
             <span>我已阅读并同意 <span class="text-link" onclick="event.stopPropagation();openAgreement()">《用户协议》</span> 与 <span class="text-link" onclick="event.stopPropagation();openPrivacy()">《隐私政策》</span></span>
           </label>
           <button class="btn btn-primary btn-block" id="auth-submit">登 录</button>
-          <div class="auth-hint">匿名服务 · 数据加密 · 严格保护你的隐私</div>
+          <div class="auth-hint">功能原型 · 请勿输入可识别的敏感信息</div>
         </div>
       </div>
     </section>
@@ -60,17 +60,21 @@
           <div class="mood" onclick="go('chat')">🌱 记录此刻心情 · 找小暖聊聊</div>
         </div>
 
+        <div class="msg-note" onclick="openMessages()">
+          <span class="ico">📮</span><span class="txt">我的消息</span><span class="badge" id="msg-badge-home">0</span><span class="arrow">›</span>
+        </div>
+
         <div class="sec-head"><h3>开始你的心灵之旅</h3></div>
         <div class="grid-2">
           <div class="feat" onclick="go('chat')">
             <div class="ico ico-green">💬</div>
             <h4>AI 暖心对话</h4>
-            <p>24 小时在线，随时倾诉与陪伴</p>
+            <p>AI 情绪梳理，明确边界与安全提示</p>
           </div>
           <div class="feat" onclick="go('scales')">
             <div class="ico ico-purple">📋</div>
             <h4>专业心理测评</h4>
-            <p>7 种权威量表，科学了解自己</p>
+            <p>4 类自我筛查工具，结果不等于诊断</p>
           </div>
           <div class="feat" onclick="go('articles')">
             <div class="ico ico-gold">📖</div>
@@ -80,7 +84,7 @@
           <div class="feat" onclick="go('book')">
             <div class="ico ico-coral">🧑‍⚕️</div>
             <h4>咨询师预约</h4>
-            <p>20+ 资深咨询师，一对一指导</p>
+            <p>专业资源预约流程演示</p>
           </div>
         </div>
 
@@ -110,8 +114,8 @@
         </div>
         <div class="avatar">🌿<span class="dot"></span></div>
         <div>
-          <div class="nm">小暖 · AI 心理陪伴师</div>
-          <div class="st">在线 · 24h 倾听</div>
+          <div class="nm">小暖 · AI 心理支持助手</div>
+          <div class="st">AI生成内容 · 不替代专业服务</div>
         </div>
       </div>
 
@@ -134,7 +138,7 @@
       </div>
       <div class="scroll">
         <p style="font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:16px">
-          基于国际权威量表（PHQ-9、GAD-7 等），3–5 分钟完成一次自我觉察，自动生成专属报告。
+          原型提供 PHQ-9、GAD-7、CPSS 与 UCLA 四类自我筛查流程，仅供自我了解；正式使用前仍需核验版本、授权与计分规则。
         </p>
         <div class="chips-row" style="padding:0 0 14px" id="scale-cats"></div>
         <div id="scale-list"></div>
@@ -217,12 +221,12 @@
     <section class="screen" id="screen-book">
       <div class="topbar">
         <div class="back" onclick="back()">‹</div>
-        <div class="title">咨询师预约</div>
+        <div class="title">专业资源预约演示</div>
         <div class="spacer"></div>
       </div>
       <div class="scroll">
         <p style="font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:16px">
-          20+ 位资深心理咨询师在线，AI 评估 + 人工干预，形成立体化服务闭环。
+          以下为6类资源入口的界面与流程示例，并非已签约咨询师或医疗服务。正式接入前须逐一核验资质并取得授权。
         </p>
         <div class="chips-row" style="padding:0 0 14px" id="doc-cats"></div>
         <div id="doc-list"></div>
@@ -296,6 +300,7 @@
           <div class="mi" onclick="goRecords('chat')"><span class="ico">🕘</span>历史记录<span class="arrow">›</span></div>
           <div class="mi" onclick="goRecords('scale')"><span class="ico">📋</span>我的测评<span class="arrow">›</span></div>
           <div class="mi" onclick="goRecords('book')"><span class="ico">🧑‍⚕️</span>我的预约<span class="arrow">›</span></div>
+          <div class="mi" onclick="openMessages()"><span class="ico">📮</span>我的消息<span class="badge" id="msg-badge"></span><span class="arrow">›</span></div>
           <div class="mi" onclick="openFavorites()"><span class="ico">⭐</span>我的收藏<span class="arrow">›</span></div>
           <div class="mi" onclick="openSettings()"><span class="ico">⚙️</span>设置<span class="arrow">›</span></div>
         </div>
@@ -313,6 +318,21 @@
         <div class="tab" data-tab="articles"><span class="ico">📖</span>科普</div>
         <div class="tab on" data-tab="profile"><span class="ico">👤</span>我的</div>
       </nav>
+    </section>
+
+    <!-- ============ 消息中心 ============ -->
+    <section class="screen" id="screen-messages">
+      <div class="topbar">
+        <div class="back" onclick="back()">‹</div>
+        <div class="title">我的消息</div>
+        <div class="spacer"></div>
+      </div>
+      <div class="scroll">
+        <p style="font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:16px">
+          来自医生/管理员的关怀建议与回复将会显示在这里。收到后请及时查看 🌿
+        </p>
+        <div id="msg-list"></div>
+      </div>
     </section>
 
     <!-- ============ 历史记录 ============ -->
@@ -342,7 +362,10 @@
 
   </div>
 
+  <script src="js/safety.js"></script>
   <script src="js/data.js"></script>
+  <!-- Capacitor 容器内无法使用同源相对路径，指定云端后端地址 -->
+  <script>window.__WM_API__ = 'http://47.93.117.13:8080';</script>
   <script src="js/app.js"></script>
 </body>
 </html>

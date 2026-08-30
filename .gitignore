@@ -33,6 +33,9 @@ yarn-error.log*
 .venv/
 venv/
 
+# Runtime SQLite database (contains user/event/message data; regenerated on start)
+backend/data/
+
 # IDE, OS and runtime files
 .idea/
 .vscode/

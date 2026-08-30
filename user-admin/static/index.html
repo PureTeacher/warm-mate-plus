@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>暖愈心伴 · 用户数据管理平台</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- ============ 登录 ============ -->
+<section id="login-view" class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="logo">🌿</div>
+      <div>
+        <div class="t">暖愈心伴 · 数据平台</div>
+        <div class="s">用户使用监控 · 建议下发</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>账号</label>
+      <input id="login-user" placeholder="请输入管理员/医生账号" value="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input id="login-pass" type="password" placeholder="请输入密码" value="admin123" autocomplete="current-password">
+    </div>
+    <div class="login-err" id="login-err"></div>
+    <button class="btn btn-primary btn-block" id="login-btn">登 录</button>
+    <div class="login-hint">提示：管理员 admin/admin123 · 医生 doctor/doctor123</div>
+  </div>
+</section>
+
+<!-- ============ 主界面 ============ -->
+<div id="app-view" class="app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="favicon.svg" alt="" onerror="this.style.display='none'">
+      <div>
+        <div class="t">暖愈心伴 · 数据平台</div>
+        <div class="s">用户数据管理</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot">
+      <div class="who" id="who"></div>
+      <div class="logout" onclick="logout()">退出登录</div>
+    </div>
+  </aside>
+  <main class="content">
+    <header class="topbar">
+      <div>
+        <h1 id="viewTitle">实时看板</h1>
+        <div class="sub" id="viewSub">监控用户的 App 使用情况</div>
+      </div>
+      <div id="topActions"></div>
+    </header>
+    <section class="view" id="view"><div class="spinner"></div></section>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

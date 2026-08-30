@@ -560,3 +560,34 @@ html { height: 100%; }
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 .center { text-align: center; }
 .mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+
+/* ============ 消息中心（接收建议） ============ */
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px; margin-left: auto;
+  border-radius: 99px; background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 600;
+}
+.badge:empty { display: none; }
+
+.msg-note {
+  display: flex; align-items: center; gap: 8px;
+  background: linear-gradient(90deg, #fff4ec, #fff8f2);
+  border: 1px solid #f3ded4; border-radius: var(--r-md);
+  padding: 11px 14px; margin-bottom: 18px; cursor: pointer;
+}
+.msg-note .ico { font-size: 18px; }
+.msg-note .txt { font-size: 14px; font-weight: 600; color: var(--text); }
+.msg-note .arrow { margin-left: auto; color: var(--text-3); }
+
+.msg-card { padding: 14px; margin-bottom: 12px; }
+.msg-card.unread { border-left: 3px solid var(--accent); background: #fffbf7; }
+.msg-card .msg-head {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13.5px; color: var(--text-2); margin-bottom: 8px;
+}
+.msg-card .msg-head .msg-time { margin-left: auto; font-size: 11.5px; color: var(--text-3); }
+.msg-card .msg-body {
+  font-size: 14.5px; line-height: 1.75; color: var(--text); white-space: pre-wrap;
+}
+.msg-card .msg-actions { margin-top: 10px; text-align: right; }
